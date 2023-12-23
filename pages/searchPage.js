@@ -1,0 +1,95 @@
+import React, { useEffect, useState, useContext } from "react";
+
+//INTRNAL IMPORT
+import Style from "../styles/searchPage.module.css";
+import {
+  Slider,
+  Brand,
+  Loader,
+  Title,
+  HorizontalLine,
+} from "../components/componentsindex";
+import { SearchBar } from "../SearchPage/searchBarIndex";
+import { Filter } from "../components/componentsindex";
+
+import { NFTCardTwo, Banner } from "../collectionPage/collectionIndex";
+import images from "../img";
+
+//SMART CONTRACT IMPORT
+import { NFTMarketplaceContext } from "../Context/NFTMarketplaceContext";
+
+const searchPage = () => {
+  const { fetchNFTs, setError } = useContext(NFTMarketplaceContext);
+  const [nfts, setNfts] = useState([]);
+  const [nftsCopy, setNftsCopy] = useState([]);
+
+  useEffect(() => {
+    try {
+      fetchNFTs().then((items) => {
+        setNfts(items.reverse());
+        setNftsCopy(items);
+      });
+    } catch (error) {
+      setError("Please reload the browser", error);
+    }
+  }, []);
+
+  const onHandleSearch = (value) => {
+    const filteredNFTS = nfts.filter(({ name }) =>
+      name.toLowerCase().includes(value.toLowerCase())
+    );
+
+    if (filteredNFTS.length === 0) {
+      setNfts(nftsCopy);
+    } else {
+      setNfts(filteredNFTS);
+    }
+  };
+
+  const onClearSearch = () => {
+    if (nfts.length && nftsCopy.length) {
+      setNfts(nftsCopy);
+    }
+  };
+
+  // const collectionArray = [
+  //   images.nft_image_1,
+  //   images.nft_image_2,
+  //   images.nft_image_3,
+  //   images.nft_image_1,
+  //   images.nft_image_2,
+  //   images.nft_image_3,
+  //   images.nft_image_1,
+  //   images.nft_image_2,
+  // ];
+  useEffect(() => {
+    if (window.ethereum) {
+      window.ethereum.on("chainChanged", () => {
+        window.location.reload();
+      });
+      window.ethereum.on("accountsChanged", () => {
+        window.location.reload();
+      });
+    }
+  });
+
+  return (
+    <div className={Style.searchPage}>
+      <Title
+        heading="수많은 NFT를 검색해보세요."
+        paragraph="Discover the most outstanding NFTs in all topics of life."
+      />
+      <SearchBar
+        onHandleSearch={onHandleSearch}
+        onClearSearch={onClearSearch}
+      />
+      <HorizontalLine text="검색 결과" />
+      <Filter />
+      {nfts.length == 0 ? <Loader /> : <NFTCardTwo NFTData={nfts} />}
+      <Slider />
+      <Brand />
+    </div>
+  );
+};
+
+export default searchPage;
